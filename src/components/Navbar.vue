@@ -2,11 +2,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <router-link class="navbar-brand d-flex" :to="{ name: 'Home' }">
       <div class="d-flex flex-column align-items-center">
-        <img
-          alt="logo"
-          src="../assets/img/cw-logo.png"
-          height="45"
-        />
+        <h1>AS Blogger</h1>
       </div>
     </router-link>
     <button
@@ -33,6 +29,9 @@
           </router-link>
         </li>
       </ul>
+      <div class="pr-5 action" data-toggle="modal" data-target="#create-blog">
+        <span>Create Blog</span>
+      </div>
       <span class="navbar-text">
         <button
           class="btn btn-outline-primary text-uppercase"
@@ -41,7 +40,6 @@
         >
           Login
         </button>
-
         <div class="dropdown" v-else>
           <div
             class="dropdown-toggle"
@@ -76,16 +74,73 @@
       </span>
     </div>
   </nav>
+  <!-- Modal -->
+  <div class="modal fade"
+       id="create-blog"
+       tabindex="-1"
+       role="dialog"
+       aria-labelledby="create-blog"
+       aria-hidden="true"
+  >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            New Blog
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="createBlog">
+            <div class="form-group">
+              <label class="pr-2" for="title">Title</label>
+              <input type="text"
+                     id="title"
+                     class="form-control"
+                     required
+                     placeholder="Title..."
+                     v-model="state.newBlog.title"
+              >
+            </div>
+            <div class="form-group">
+              <label class="pr-2" for="body">Body</label>
+              <textarea type="text"
+                        id="body"
+                        class="form-control"
+                        placeholder="Body..."
+                        required
+                        v-model="state.newBlog.body"
+              ></textarea>
+            </div>
+            <div>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                Close
+              </button>
+              <button type="submit" class="btn btn-primary">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 import { AuthService } from '../services/AuthService'
 import { AppState } from '../AppState'
 import { computed, reactive } from 'vue'
+import Pop from '../utils/Notifier'
+import { blogsService } from '../services/BlogsService'
+import $ from 'jquery'
 export default {
   setup() {
     const state = reactive({
-      dropOpen: false
+      dropOpen: false,
+      newBlog: {}
     })
     return {
       state,
@@ -95,6 +150,15 @@ export default {
       },
       async logout() {
         AuthService.logout({ returnTo: window.location.origin })
+      },
+      async createBlog() {
+        try {
+          await blogsService.createBlog(state.newBlog)
+          $('#create-blog').modal('hide')
+          Pop.toast('Created!', 'success')
+        } catch (e) {
+          Pop.toast(e, 'error')
+        }
       }
     }
   }
